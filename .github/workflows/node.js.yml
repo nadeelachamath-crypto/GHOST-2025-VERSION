@@ -2,15 +2,12 @@ name: Node.js CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -21,16 +18,42 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    # Node.js (required by your app + yt-dlp JS solver)
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-     
-    - name: Install python dependencies
-      run: pip install yt-dlp && pip install yt-dlp --upgrade
+        cache: npm
 
-    - name: Install dependencies
-      run: npm install && npm i @whiskeysockets/baileys && npm i openai
+    # Python (required by yt-dlp)
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
+    # Always install latest yt-dlp
+    - name: Install yt-dlp
+      run: |
+        python -m pip install --upgrade pip
+        pip install -U yt-dlp
+
+    # Install yt-dlp JS challenge solver (EJS)
+    - name: Install yt-dlp JS solver
+      run: |
+        mkdir -p ~/.cache/yt-dlp
+        curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp-ejs.zip -o ejs.zip
+        unzip -o ejs.zip -d ~/.cache/yt-dlp
+
+    # Force yt-dlp to use Node.js
+    - name: Set yt-dlp JS runtime
+      run: echo "YTDLP_JS_RUNTIME=node" >> $GITHUB_ENV
+
+    # Node dependencies
+    - name: Install Node dependencies
+      run: |
+        npm install
+        npm install @whiskeysockets/baileys openai
+
+    # Start app
     - name: Start application
       run: npm start
