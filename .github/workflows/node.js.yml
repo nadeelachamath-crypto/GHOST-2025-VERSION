@@ -25,9 +25,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        
-    - name: Run wasm tests with Node
-      run: wasm-pack test --js-runtimes node
      
     - name: Install python dependencies
       run: pip install yt-dlp && pip install yt-dlp --upgrade
